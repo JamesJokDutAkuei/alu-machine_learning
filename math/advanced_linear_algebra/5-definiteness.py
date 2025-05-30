@@ -1,74 +1,63 @@
 #!/usr/bin/env python3
 """
-Module `4-inverse`
-This module calculates the inverse of a given square matrix
+Module `5-definiteness`
+This module calculates the definiteness of a given matrix
 """
 
 
-def inverse(matrix):
-    """
-    Calculate the inverse of a given square matrix.
+import numpy as np
 
-    The inverse A^(-1) of a matrix A is such that A * A^(-1) = A^(-1) * A = I,
-    where I is the identity matrix.
+
+def definiteness(matrix):
+    """
+    Calculate the definiteness of a given square matrix.
 
     Args:
-    matrix (list of lists): The input matrix whose inverse is
-    to be calculated.
-    Each inner list represents a row of the matrix.
+    matrix (numpy.ndarray): The input matrix whose definiteness
+    is to be calculated.
+    It should be a square matrix of shape (n, n).
 
     Returns:
-    list of lists or None: The inverse of the input matrix,
-    or None if the matrix is singular.
+    str or None: The definiteness of the matrix as a string,
+    or None if the matrix is not valid.
+    Possible return values are:
+        - "Positive definite"
+        - "Positive semi-definite"
+        - "Negative semi-definite"
+        - "Negative definite"
+        - "Indefinite"
+        - None (if the matrix doesn't fit any category or is not valid)
 
     Raises:
-    TypeError: If the input is not a list of lists.
-    ValueError: If the input matrix is not square or is empty.
+    TypeError: If the input is not a numpy.ndarray.
     """
+    if not isinstance(matrix, np.ndarray):
+        raise TypeError("matrix must be a numpy.ndarray")
 
-    if not isinstance(matrix, list) or not all(
-            isinstance(row, list) for row in matrix):
-        raise TypeError("matrix must be a list of lists")
-
-    n = len(matrix)
-    if n == 0 or any(len(row) != n for row in matrix):
-        raise ValueError("matrix must be a non-empty square matrix")
-
-    def minor(mat, i, j):
-        """Calculate the minor of matrix mat for element at (i, j)."""
-        return [row[:j] + row[j + 1:] for row in (mat[:i] + mat[i + 1:])]
-
-    def determinant(mat):
-        """Calculate the determinant of a matrix."""
-        if len(mat) == 1:
-            return mat[0][0]
-        if len(mat) == 2:
-            return mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0]
-        det = 0
-        for j in range(len(mat)):
-            det += ((-1) ** j) * mat[0][j] * determinant(minor(mat, 0, j))
-        return det
-
-    det = determinant(matrix)
-
-    if det == 0:
+    if matrix.ndim != 2 or matrix.shape[0] != matrix.shape[1]:
         return None
 
-    if n == 1:
-        return [[1 / matrix[0][0]]]
+    if not np.allclose(matrix, matrix.T):
+        return None
 
-    cofactor_matrix = []
-    for i in range(n):
-        cofactor_row = []
-        for j in range(n):
-            minor_det = determinant(minor(matrix, i, j))
-            cofactor_row.append((-1) ** (i + j) * minor_det)
-        cofactor_matrix.append(cofactor_row)
+    try:
+        eigenvalues = np.linalg.eigvals(matrix)
+    except np.linalg.LinAlgError:
+        return None
 
-    adjugate_matrix = [[cofactor_matrix[j][i]
-                        for j in range(n)] for i in range(n)]
+    pos_eig = np.sum(eigenvalues > 1e-10)
+    neg_eig = np.sum(eigenvalues < -1e-10)
+    zero_eig = np.sum(np.isclose(eigenvalues, 0, atol=1e-10))
 
-    inverse_matrix = [[adjugate_matrix[i][j] /
-                       det for j in range(n)] for i in range(n)]
-
-    return inverse_matrix
+    if pos_eig == len(eigenvalues):
+        return "Positive definite"
+    elif pos_eig + zero_eig == len(eigenvalues) and pos_eig > 0:
+        return "Positive semi-definite"
+    elif neg_eig == len(eigenvalues):
+        return "Negative definite"
+    elif neg_eig + zero_eig == len(eigenvalues) and neg_eig > 0:
+        return "Negative semi-definite"
+    elif pos_eig > 0 and neg_eig > 0:
+        return "Indefinite"
+    else:
+        return None
