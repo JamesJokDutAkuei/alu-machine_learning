@@ -199,4 +199,3 @@ class Neuron:
 
         # Evaluate the final model
         return self.evaluate(X, Y)
-    

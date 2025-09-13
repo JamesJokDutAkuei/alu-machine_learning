@@ -110,4 +110,3 @@ class Neuron:
         cost = self.cost(Y, A)
 
         return prediction, cost
-    

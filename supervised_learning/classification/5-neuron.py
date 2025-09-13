@@ -139,4 +139,3 @@ class Neuron:
         # Update weights and bias
         self.__W -= alpha * dW
         self.__b -= alpha * db
-        
