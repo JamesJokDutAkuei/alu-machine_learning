@@ -82,3 +82,4 @@ class Neuron:
                                  (1 - Y) * np.log(1.0000001 - A))
 
         return cost
+    
